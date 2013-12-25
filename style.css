@@ -1,0 +1,27 @@
+body
+{
+}
+canvas
+{
+
+}
+.container
+{
+    width:400px;
+    margin:auto;
+}
+#canvasContainer{
+    border:1px solid silver;
+}
+.tool
+{
+    padding: 10px;
+}
+.btn{
+    width:32px;
+    height:32px;
+    background: #eee;
+}
+.btn_hit{
+
+}
