@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Taghvim Designer</title>
     <link type="text/css" rel="stylesheet" href="style.css">
     <script type="text/javascript" src="jqueryFramework.js"></script>
@@ -11,16 +12,43 @@
     <div class="container">
         <div class="tool">
             <button>pointer</button>
+            <button>line</button>
             <button>rect</button>
             <button>text</button>
-            <button>Image</button>
-            <button>Holidays</button>
-            <button>Month</button>
+            <button>image</button>
+            <button>holiday</button>
+            <button>month</button>
+            <span style="margin:0 10px ;color:#faa;font-size: 11px">یکی ا اینا ره انتخاب کن پایین بکش</span>
         </div>
-        <div id="canvasContainer">
-            <canvas id="canvasElement" width="400" height="600">
-                ای بنده خدا مرورگرت جدید نیست اگر میتوانی کاری بکن
-            </canvas>
+        <div class="ch_FL">
+            <div id="canvasContainer">
+                <canvas id="canvasElement" width="400" height="600">
+                    ای بنده خدا مرورگرت جدید نیست اگر میتوانی کاری بکن
+                </canvas>
+            </div>
+            <div id="PropertiesDiv">
+                <div>
+                    <h1>Text Properties</h1>
+                    <input type="text" >
+                    <select>
+                        <option>chokh small</option>
+                        <option>small</option>
+                        <option>normal</option>
+                        <option>big</option>
+                        <option>chokh big</option>
+                    </select>
+                </div>
+                <div>
+                    <h1>Image Properties</h1>
+                    <input type="file" id="imageloader" >
+                </div>
+                <div>
+                    <h1>Month Properties</h1>
+                </div>
+                <div>
+                    <h1>Holidays Properties</h1>
+                </div>
+            </div>
         </div>
     </div>
 </body>
