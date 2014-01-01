@@ -1,17 +1,106 @@
 (function(){
-    window.onload = function() {
+    $(document).ready(function(){
+        setTimeout(function(){modalWindow("#set_paperSize_Div","#set_paperSize_Div a");},500);
+        $('#paper_size').on('change', function (e) {
+            var optionSelected = $("option:selected", this);
+            var t=optionSelected.attr("size").split(",");
+            var texts=$("#set_paperSize_Div :text");
+            $(texts[0]).val(t[0]);
+            $(texts[1]).val(t[1]);
+        });
+
+        //===============initialize Paper framework===============
         paper.setup("canvasElement");
         paper.install(window);
+
+        //========================================================
+        //===================implement Tools======================
+        //========================================================
         var tools={};
         var tolbotons=$(".tool button");
         for(var i=0;i<tolbotons.length;i++) tools[$(tolbotons[i]).text()]=new Tool();
 
+        var selectedItem;
+        tools.pointer.onMouseDown=function(event){
+            selectedItem=[];
+            var childs=project.activeLayer.children;
+            for(var i=0;i<childs.length;i++){
+                if(childs[i].selected=childs[i].contains(event.point))selectedItem.push(childs[i]);
+            }
+            $("#PropertiesDiv > div").hide();
+            if(selectedItem.length==1){
+                var sel=selectedItem[0];
+                if(sel.toltype){
+                    $("#"+sel.toltype+"Properties").fadeIn(300);
+                    if(sel.toltype)textpath=sel;
+                    $("#typographic_text").val(textpath.content);
+                }
+//                if(sel.content){
+//                    textpath=sel;
+//                    $("#textProperties").fadeIn(300);
+//                }
+            }
+        }
+        tools.pointer.onMouseDrag=function(event){
+            for(var i=0;i<selectedItem.length;i++)
+            {
+                selectedItem[i].translate(event.delta);
+            }
+//            rectpath.segments[1].point = {x:rectpath.segments[0].point.x, y:event.point.y}
+//            rectpath.segments[2].point = event.point;
+//            rectpath.segments[3].point = {x:event.point.x,y:rectpath.segments[0].point.y}
+        }
+
+        var rsselectedItem;
+        tools.rotate.onMouseDown=function(event){
+            rsselectedItem=[];
+            var childs=project.activeLayer.children;
+            for(var i=0;i<childs.length;i++){
+                if(childs[i].selected=childs[i].contains(event.point))
+                {
+                    rsselectedItem.push(childs[i]);
+                    childs[i].angle=0;
+                }
+            }
+            $("#PropertiesDiv > div").hide();
+        }
+        tools.rotate.onMouseDrag=function(event){
+            for(var i=0;i<rsselectedItem.length;i++)
+            {
+                var r=event.point.subtract(event.downPoint).angle-rsselectedItem[i].angle;
+                rsselectedItem[i].angle+=r;
+                rsselectedItem[i].rotate(r);
+            }
+        }
+
+        var scaleSelectedItem;
+        tools.scale.onMouseDown=function(event){
+            scaleSelectedItem=[];
+            var childs=project.activeLayer.children;
+            for(var i=0;i<childs.length;i++){
+                if(childs[i].selected=childs[i].contains(event.point))
+                {
+                    scaleSelectedItem.push(childs[i]);
+                    childs[i].scllen=0;
+                }
+            }
+            $("#PropertiesDiv > div").hide();
+        }
+        tools.scale.onMouseDrag=function(event){
+            for(var i=0;i<scaleSelectedItem.length;i++)
+            {
+                var s=(event.point.subtract(event.downPoint).length-50);
+                var sc=1+(s-scaleSelectedItem[i].scllen)/100;
+                scaleSelectedItem[i].scllen=s;
+                scaleSelectedItem[i].scale(sc);
+            }
+        }
+
         var rectpath;
         tools.rect.onMouseDown=function(event){
-            var rectangle = new Rectangle(event.downPoint, event.point);
-            rectpath = new Path.Rectangle(rectangle);
+            rectpath = new Path.Rectangle( new Rectangle(event.downPoint, event.point));
+            rectpath.toltype='rect';
             rectpath.fillColor = '#e9e9ff';
-            rectpath.selected = true;
         }
         tools.rect.onMouseDrag=function(event){
             rectpath.segments[1].point = {x:rectpath.segments[0].point.x, y:event.point.y}
@@ -22,6 +111,7 @@
         var linePath;
         tools.line.onMouseDown=function(event){
             linePath = new Path();
+            linePath.toltype='line';
             linePath.strokeColor = 'black';
             linePath.add(event.point);
             linePath.add(event.point);
@@ -29,17 +119,21 @@
         }
         tools.line.onMouseDrag=function(event){
             linePath.segments[1].point=event.point;
+            $("#lp").val(event.downPoint.x+","+event.downPoint.y+","+event.point.x+","+event.point.y);
         }
+
         var textpath;
+        $("#typographic_text").keyup(function(){
+            textpath.content=$("#typographic_text").val();
+            view.draw();
+        });
         tools.text.onMouseDown=function(event){
             textpath = new PointText(event.point);
+            textpath.toltype='text';
             textpath.fillColor = 'red';
             textpath.content = 'kabab ba goje';
-            $(":text").val(textpath.content);
-            $(":input").keyup(function(){
-                textpath.content=$(":text").val();
-                view.draw();
-            });
+            $("#typographic_text").val(textpath.content);
+
             textpath.angle=0;
             textpath.length=0;
         }
@@ -54,12 +148,26 @@
         }
 
         var thisimage;
+        $(':file').change(function(e){
+            var img = new Image();
+            var reader = new FileReader;
+            reader.onload = function(event){
+                img.onload = function() {
+                    thisimage=img;
+                };
+                img.src = event.target.result;
+            }
+
+            reader.readAsDataURL(e.target.files[0]);
+        });
         var imageraster;
         tools.image.onMouseDown=function(event){
             imageraster = new Raster(thisimage);
+            imageraster.toltype='image';
             imageraster.position = event.point;
             imageraster.angle=0;
             imageraster.length=0;
+            imageraster.selected = true;
         }
         tools.image.onMouseDrag=function(event){
             var s=(event.point.subtract(event.downPoint).length-50);
@@ -85,25 +193,58 @@
 
         }
 
-        $(':file').change(function(e){
-            var img = new Image();
-            var reader = new FileReader;
-            reader.onload = function(event){
-                img.onload = function() {
-                    thisimage=img;
-                };
-                img.src = event.target.result;
-            }
 
-            reader.readAsDataURL(e.target.files[0]);
-        });
         $(".tool button").click(function(event){
+            var identifier=$(event.target).text();
             $(".tool button").removeClass("toolActivate");
             $(event.target).addClass("toolActivate");
-            tools[$(event.target).text()].activate();
-            if($(event.target).text()=="image"){
+            tools[identifier].activate();
+            if(identifier=="image"){
                 $(':file')[0].click();
             }
+            $("#PropertiesDiv > div").hide();
+            $("#"+identifier+"Properties").fadeIn(300);
         });
+        $("#resetbtn").click(function(event){
+            modalWindow("#set_paperSize_Div","#set_paperSize_Div a");
+        })
+        $("#savebtn").click(function(event){
+            var childs=project.activeLayer.children;
+            var serialize="";
+            for(var i=0;i<childs.length;i++){
+                serialize+="["+childs[i].toltype+";"+childs[i].position+";"+childs[i].bounds+"]";
+            }
+            alert(serialize);
+        });
+
+    });
+    function modalWindow(content_id,closeButton) {
+        var overlay = $("<div id='modalwinDiv'></div>");
+        $("body").append(overlay);
+        $("#modalwinDiv").click(function() {
+            close_modal();
+        });
+        $(closeButton).click(function() {
+            close_modal();
+        });
+        var modal_height = $(content_id).outerHeight();
+        var modal_width = $(content_id).outerWidth();
+        $('#modalwinDiv').css({ 'display' : 'block', opacity : 0 });
+        $('#modalwinDiv').fadeTo(200,0.5);
+
+        $(content_id).css({
+            'display' : 'block','position' : 'fixed',
+            'opacity' : 0,'z-index': 11000,'left' : 50 + '%',
+            'margin-left' : -(modal_width/2) + "px",
+            'top' : 100 + "px"
+        });
+
+        $(content_id).fadeTo(200,1);
+        function close_modal(){
+            $("#modalwinDiv").fadeOut(200);
+            $(content_id).css({ 'display' : 'none' });
+
+        }
     }
+
 })();

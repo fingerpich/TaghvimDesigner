@@ -1,5 +1,7 @@
 body
 {
+    font-size: 62.5%;
+    font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 canvas
 {
@@ -20,19 +22,11 @@ canvas
 .tool
 {
 }
-.btn{
-    width:32px;
-    height:32px;
-    background: #eee;
-}
-.btn_hit{
-
-}
 .ch_FL > div
 {
     float:left;
 }
-button{
+.tool button{
     padding:10px;
     margin: 0;
     background: none;
@@ -41,7 +35,56 @@ button{
     outline: none;
     font-size: 12px;
 }
-.toolActivate{
+.tool button:hover{
+    color:#700;
+}
+.tool .toolActivate{
     color: red;
     border-bottom: 1px solid red;
+}
+
+
+
+
+#modalwinDiv {
+    position: fixed;
+    z-index:100;
+    top: 0px;
+    left: 0px;
+    height:100%;
+    width:100%;
+    background: #000;
+    display: none;
+}
+#set_paperSize_Div input{
+    width: 100px;
+    padding: 8px;
+    border-radius: 4px;
+}
+#set_paperSize_Div label{
+    display: block;
+    float: left;
+    width: 80px;
+    padding-top: 8px;
+    color: #222;
+    font-size: 1.3em;
+    text-align: left;
+}
+#set_paperSize_Div .txtfld {
+    padding: 10px;
+}
+
+
+#savebtn{
+    padding: 10px 30px;
+    border: none;
+    background: #498F49;
+    color: #FFF;
+    font-weight: bold;
+    border-radius: 5px;
+}
+#resetbtn{
+    border: none;
+    padding: 10px 20px;
+    background: none;
 }
