@@ -1,6 +1,26 @@
 (function(){
     $(document).ready(function(){
         setTimeout(function(){modalWindow("#set_paperSize_Div","#set_paperSize_Div a");},500);
+
+        $('.colpick').jPicker({
+            window:{expandable: true,title:"برای تغییر رنگ مکان نشانه ها رو تغییر ده"},
+            color:{alphaSupport: true,active: new $.jPicker.Color({ ahex: '99330099' })}
+        }
+            ,function(){
+
+            }//commit callback
+            ,function(color,context){
+                if(active_Item)
+                {
+                    var method=(active_Item.toltype=="line"?"stroke":"fill")+"Color";
+                    active_Item[method]="#"+(color.val('hex')||"fff");
+                }
+            }//live change callback
+            ,function(){
+
+            }//cancel callback
+        );
+
         $('#paper_size').on('change', function (e) {
             var optionSelected = $("option:selected", this);
             var t=optionSelected.attr("size").split(",");
@@ -20,20 +40,23 @@
         var tolbotons=$(".tool button");
         for(var i=0;i<tolbotons.length;i++) tools[$(tolbotons[i]).text()]=new Tool();
 
-        var selectedItem;
+        var active_Item;
+
         tools.pointer.onMouseDown=function(event){
-            selectedItem=[];
+            active_Item=[];
             var childs=project.activeLayer.children;
             for(var i=0;i<childs.length;i++){
-                if(childs[i].selected=childs[i].contains(event.point))selectedItem.push(childs[i]);
+                if(childs[i].selected=childs[i].contains(event.point))active_Item.push(childs[i]);
             }
             $("#PropertiesDiv > div").hide();
-            if(selectedItem.length==1){
-                var sel=selectedItem[0];
-                if(sel.toltype){
-                    $("#"+sel.toltype+"Properties").fadeIn(300);
-                    if(sel.toltype)textpath=sel;
-                    $("#typographic_text").val(textpath.content);
+            if(active_Item.length==1){
+                active_Item=active_Item[0];
+                if(active_Item.toltype){
+                    var prop_div_id="#"+active_Item.toltype+"Properties";
+                    $(prop_div_id).fadeIn(300);
+                    if(active_Item.toltype=="text")
+                        $("#typographic_text").val(active_Item.content);
+                    $(prop_div_id+" .colpick")[0].color.active.val('hex', active_Item.fillColor.toCSS(true), this);
                 }
 //                if(sel.content){
 //                    textpath=sel;
@@ -42,109 +65,99 @@
             }
         }
         tools.pointer.onMouseDrag=function(event){
-            for(var i=0;i<selectedItem.length;i++)
-            {
-                selectedItem[i].translate(event.delta);
-            }
-//            rectpath.segments[1].point = {x:rectpath.segments[0].point.x, y:event.point.y}
-//            rectpath.segments[2].point = event.point;
-//            rectpath.segments[3].point = {x:event.point.x,y:rectpath.segments[0].point.y}
+            var a=active_Item.length?active_Item:[active_Item];
+            $.each(a,function(index,item){item.translate(event.delta)});
         }
 
-        var rsselectedItem;
         tools.rotate.onMouseDown=function(event){
-            rsselectedItem=[];
+            active_Item=[];
             var childs=project.activeLayer.children;
             for(var i=0;i<childs.length;i++){
                 if(childs[i].selected=childs[i].contains(event.point))
                 {
-                    rsselectedItem.push(childs[i]);
+                    active_Item.push(childs[i]);
                     childs[i].angle=0;
                 }
             }
             $("#PropertiesDiv > div").hide();
         }
         tools.rotate.onMouseDrag=function(event){
-            for(var i=0;i<rsselectedItem.length;i++)
-            {
-                var r=event.point.subtract(event.downPoint).angle-rsselectedItem[i].angle;
-                rsselectedItem[i].angle+=r;
-                rsselectedItem[i].rotate(r);
-            }
+            var a=active_Item.length?active_Item:[active_Item];
+            $.each(a,function(index,item){
+                var r=event.point.subtract(event.downPoint).angle-item.angle;
+                item.angle+=r;
+                item.rotate(r);
+            });
         }
 
-        var scaleSelectedItem;
         tools.scale.onMouseDown=function(event){
-            scaleSelectedItem=[];
+            active_Item=[];
             var childs=project.activeLayer.children;
             for(var i=0;i<childs.length;i++){
                 if(childs[i].selected=childs[i].contains(event.point))
                 {
-                    scaleSelectedItem.push(childs[i]);
+                    active_Item.push(childs[i]);
                     childs[i].scllen=0;
                 }
             }
             $("#PropertiesDiv > div").hide();
         }
         tools.scale.onMouseDrag=function(event){
-            for(var i=0;i<scaleSelectedItem.length;i++)
-            {
+            var a=active_Item.length?active_Item:[active_Item];
+            $.each(a,function(index,item){
                 var s=(event.point.subtract(event.downPoint).length-50);
-                var sc=1+(s-scaleSelectedItem[i].scllen)/100;
-                scaleSelectedItem[i].scllen=s;
-                scaleSelectedItem[i].scale(sc);
-            }
+                var sc=1+(s-item.scllen)/100;
+                item.scllen=s;
+                item.scale(sc);
+            });
         }
 
-        var rectpath;
         tools.rect.onMouseDown=function(event){
-            rectpath = new Path.Rectangle( new Rectangle(event.downPoint, event.point));
-            rectpath.toltype='rect';
-            rectpath.fillColor = '#e9e9ff';
+            active_Item = new Path.Rectangle( new Rectangle(event.downPoint, event.point));
+            active_Item.toltype='rect';
+            active_Item.fillColor ="#"+$("#rectProperties .colpick")[0].color.active.val('hex')||"000";
         }
         tools.rect.onMouseDrag=function(event){
-            rectpath.segments[1].point = {x:rectpath.segments[0].point.x, y:event.point.y}
-            rectpath.segments[2].point = event.point;
-            rectpath.segments[3].point = {x:event.point.x,y:rectpath.segments[0].point.y}
+            active_Item.segments[1].point = {x:active_Item.segments[0].point.x, y:event.point.y}
+            active_Item.segments[2].point = event.point;
+            active_Item.segments[3].point = {x:event.point.x,y:active_Item.segments[0].point.y}
         }
 
-        var linePath;
         tools.line.onMouseDown=function(event){
-            linePath = new Path();
-            linePath.toltype='line';
-            linePath.strokeColor = 'black';
-            linePath.add(event.point);
-            linePath.add(event.point);
-            rectpath.selected = true;
+            active_Item = new Path();
+            active_Item.toltype='line';
+            active_Item.strokeColor ="#"+$("#lineProperties .colpick")[0].color.active.val('hex')||"000";
+
+            active_Item.add(event.point);
+            active_Item.add(event.point);
         }
         tools.line.onMouseDrag=function(event){
-            linePath.segments[1].point=event.point;
+            active_Item.segments[1].point=event.point;
             $("#lp").val(event.downPoint.x+","+event.downPoint.y+","+event.point.x+","+event.point.y);
         }
 
-        var textpath;
         $("#typographic_text").keyup(function(){
-            textpath.content=$("#typographic_text").val();
+            active_Item.content=$("#typographic_text").val();
             view.draw();
         });
         tools.text.onMouseDown=function(event){
-            textpath = new PointText(event.point);
-            textpath.toltype='text';
-            textpath.fillColor = 'red';
-            textpath.content = 'kabab ba goje';
-            $("#typographic_text").val(textpath.content);
+            active_Item = new PointText(event.point);
+            active_Item.toltype='text';
+            active_Item.fillColor ="#"+$("#textProperties .colpick")[0].color.active.val('hex')||"000";
+            active_Item.content = 'kabab ba goje';
+            $("#typographic_text").val(active_Item.content);
 
-            textpath.angle=0;
-            textpath.length=0;
+            active_Item.angle=0;
+            active_Item.length=0;
         }
         tools.text.onMouseDrag=function(event){
             var s=(event.point.subtract(event.downPoint).length-50);
-            var r=event.point.subtract(event.downPoint).angle-textpath.angle;
-            var sc=1+(s-textpath.length)/100;
-            textpath.length=s;
-            textpath.angle+=r;
-            textpath.rotate(r);
-            textpath.scale(sc);
+            var r=event.point.subtract(event.downPoint).angle-active_Item.angle;
+            var sc=1+(s-active_Item.length)/100;
+            active_Item.length=s;
+            active_Item.angle+=r;
+            active_Item.rotate(r);
+            active_Item.scale(sc);
         }
 
         var thisimage;
@@ -160,23 +173,22 @@
 
             reader.readAsDataURL(e.target.files[0]);
         });
-        var imageraster;
         tools.image.onMouseDown=function(event){
-            imageraster = new Raster(thisimage);
-            imageraster.toltype='image';
-            imageraster.position = event.point;
-            imageraster.angle=0;
-            imageraster.length=0;
-            imageraster.selected = true;
+            active_Item = new Raster(thisimage);
+            active_Item.toltype='image';
+            active_Item.position = event.point;
+            active_Item.angle=0;
+            active_Item.length=0;
+            active_Item.selected = true;
         }
         tools.image.onMouseDrag=function(event){
             var s=(event.point.subtract(event.downPoint).length-50);
-            var r=event.point.subtract(event.downPoint).angle-imageraster.angle;
-            var sc=1+(s-imageraster.length)/100;
-            imageraster.length=s;
-            imageraster.angle+=r;
-            imageraster.rotate(r);
-            imageraster.scale(sc);
+            var r=event.point.subtract(event.downPoint).angle-active_Item.angle;
+            var sc=1+(s-active_Item.length)/100;
+            active_Item.length=s;
+            active_Item.angle+=r;
+            active_Item.rotate(r);
+            active_Item.scale(sc);
         }
 
         tools.month.onMouseDown=function(){
