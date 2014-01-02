@@ -3,8 +3,9 @@
         setTimeout(function(){modalWindow("#set_paperSize_Div","#set_paperSize_Div a");},500);
 
         $('.colpick').jPicker({
-            window:{expandable: true,title:"برای تغییر رنگ مکان نشانه ها رو تغییر ده"},
-            color:{alphaSupport: true,active: new $.jPicker.Color({ ahex: '99330099' })}
+            window:{expandable: true,title:"برای تغییر رنگ مکان نشانه ها رو تغییر ده"}
+            ,color:{alphaSupport: true,active: new $.jPicker.Color({ ahex: '99330099' })}
+            ,images:{clientPath: 'Helpers/images/'}// Path to image files
         }
             ,function(){
 
