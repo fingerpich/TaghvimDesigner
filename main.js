@@ -2,14 +2,13 @@
     $(document).ready(function(){
         setTimeout(function(){modalWindow("#set_paperSize_Div","#set_paperSize_Div a");},500);
 
-        $('.colpick').jPicker({
+        $('.colpick').jPicker(
+            {
             window:{expandable: true,title:"برای تغییر رنگ مکان نشانه ها رو تغییر ده"}
             ,color:{alphaSupport: true,active: new $.jPicker.Color({ ahex: '99330099' })}
             ,images:{clientPath: 'Helpers/images/'}// Path to image files
         }
-            ,function(){
-
-            }//commit callback
+            ,function(){}//commit callback
             ,function(color,context){
                 if(active_Item)
                 {
@@ -17,9 +16,7 @@
                     active_Item[method]="#"+(color.val('hex')||"fff");
                 }
             }//live change callback
-            ,function(){
-
-            }//cancel callback
+            ,function(){}//cancel callback
         );
 
         $('#paper_size').on('change', function (e) {
@@ -29,6 +26,25 @@
             $(texts[0]).val(t[0]);
             $(texts[1]).val(t[1]);
         });
+        $('#startDesignBtn').on('click',function(e){
+            var texts=$("#set_paperSize_Div :text");
+            var width=$(texts[0]).val();
+            var height=$(texts[1]).val();
+            var c=document.getElementById("canvasElement");
+            c.width=width;
+            c.height=height;
+            $("#container").width(parseInt(width)+400);
+            $("#modalwinDiv").fadeOut(200);
+            $("#set_paperSize_Div").css({ 'display' : 'none' });
+
+            paper.setup("canvasElement");
+        });
+
+        $(window).resize(function(){
+            $("#status_bar").css("bottom","0px");
+            $("#status_bar").css("width",$(document).width());
+        });
+        $(window).resize();
 
         //===============initialize Paper framework===============
         paper.setup("canvasElement");
@@ -39,10 +55,17 @@
         //========================================================
         var tools={};
         var tolbotons=$(".tool button");
-        for(var i=0;i<tolbotons.length;i++) tools[$(tolbotons[i]).text()]=new Tool();
-
+        for(var i=0;i<tolbotons.length;i++) {
+            var t=$(tolbotons[i]).text();
+            tools[t]=new Tool();
+            tools[t].onMouseMove=function(event){
+                set_status(event.point.toString());
+            }
+        }
         var active_Item;
-
+        function set_status(status_text){
+            $("#status_bar").html(status_text);
+        }
         tools.pointer.onMouseDown=function(event){
             active_Item=[];
             var childs=project.activeLayer.children;
@@ -66,8 +89,9 @@
             }
         }
         tools.pointer.onMouseDrag=function(event){
-            var a=active_Item.length?active_Item:[active_Item];
+            var a=active_Item[0]?active_Item:[active_Item];
             $.each(a,function(index,item){item.translate(event.delta)});
+            set_status("Translate x:"+(event.point.x-event.downPoint.x)+" y:"+(event.point.y-event.downPoint.y));
         }
 
         tools.rotate.onMouseDown=function(event){
@@ -83,12 +107,13 @@
             $("#PropertiesDiv > div").hide();
         }
         tools.rotate.onMouseDrag=function(event){
-            var a=active_Item.length?active_Item:[active_Item];
+            var a=active_Item[0]?active_Item:[active_Item];
             $.each(a,function(index,item){
                 var r=event.point.subtract(event.downPoint).angle-item.angle;
                 item.angle+=r;
                 item.rotate(r);
             });
+            set_status("Rotate "+Math.round(a[0].angle)+" degree");
         }
 
         tools.scale.onMouseDown=function(event){
@@ -98,21 +123,24 @@
                 if(childs[i].selected=childs[i].contains(event.point))
                 {
                     active_Item.push(childs[i]);
-                    childs[i].scllen=0;
+                    childs[i].scllen=childs[i].scllen||0;
                 }
             }
             $("#PropertiesDiv > div").hide();
         }
         tools.scale.onMouseDrag=function(event){
-            var a=active_Item.length?active_Item:[active_Item];
+            var a=active_Item[0]?active_Item:[active_Item];
+            var s=(event.point.subtract(event.downPoint).length-50);
+            var sc=1+(s-a[0].scllen)/100;
             $.each(a,function(index,item){
-                var s=(event.point.subtract(event.downPoint).length-50);
-                var sc=1+(s-item.scllen)/100;
                 item.scllen=s;
                 item.scale(sc);
             });
+            set_status("Scale "+round2(a[0].scllen/100+1) +"X");
         }
-
+        function round2(original){
+            return Math.round(original*100)/100
+        }
         tools.rect.onMouseDown=function(event){
             active_Item = new Path.Rectangle( new Rectangle(event.downPoint, event.point));
             active_Item.toltype='rect';
@@ -122,6 +150,7 @@
             active_Item.segments[1].point = {x:active_Item.segments[0].point.x, y:event.point.y}
             active_Item.segments[2].point = event.point;
             active_Item.segments[3].point = {x:event.point.x,y:active_Item.segments[0].point.y}
+            set_status("draw rectangle from "+event.downPoint.toString()+" width:"+(event.point.x-event.downPoint.x)+" height:"+(event.point.y-event.downPoint.y));
         }
 
         tools.line.onMouseDown=function(event){
@@ -135,6 +164,7 @@
         tools.line.onMouseDrag=function(event){
             active_Item.segments[1].point=event.point;
             $("#lp").val(event.downPoint.x+","+event.downPoint.y+","+event.point.x+","+event.point.y);
+            set_status("draw line from: "+event.downPoint.toString()+" to:"+event.point.toString());
         }
 
         $("#typographic_text").keyup(function(){
@@ -149,16 +179,17 @@
             $("#typographic_text").val(active_Item.content);
 
             active_Item.angle=0;
-            active_Item.length=0;
+            active_Item.scllen=0;
         }
         tools.text.onMouseDrag=function(event){
             var s=(event.point.subtract(event.downPoint).length-50);
             var r=event.point.subtract(event.downPoint).angle-active_Item.angle;
-            var sc=1+(s-active_Item.length)/100;
-            active_Item.length=s;
+            var sc=1+(s-active_Item.scllen)/100;
+            active_Item.scllen=s;
             active_Item.angle+=r;
             active_Item.rotate(r);
             active_Item.scale(sc);
+            set_status("draw image at "+event.downPoint.toString()+" rotate:"+Math.round(active_Item.angle)+"degree scale:"+round2(active_Item.scllen/100+1)+"X");
         }
 
         var thisimage;
@@ -179,17 +210,18 @@
             active_Item.toltype='image';
             active_Item.position = event.point;
             active_Item.angle=0;
-            active_Item.length=0;
+            active_Item.scllen=0;
             active_Item.selected = true;
         }
         tools.image.onMouseDrag=function(event){
             var s=(event.point.subtract(event.downPoint).length-50);
             var r=event.point.subtract(event.downPoint).angle-active_Item.angle;
-            var sc=1+(s-active_Item.length)/100;
-            active_Item.length=s;
+            var sc=1+(s-active_Item.scllen)/100;
+            active_Item.scllen=s;
             active_Item.angle+=r;
             active_Item.rotate(r);
             active_Item.scale(sc);
+            set_status("draw image at "+event.downPoint.toString()+" rotate:"+Math.round(active_Item.angle)+"degree scale:"+round2(active_Item.scllen/100+1));
         }
 
         tools.month.onMouseDown=function(){
@@ -207,7 +239,8 @@
         }
 
 
-        $(".tool button").click(function(event){
+
+        $(".tool button").on('click',function(event){
             var identifier=$(event.target).text();
             $(".tool button").removeClass("toolActivate");
             $(event.target).addClass("toolActivate");
@@ -229,7 +262,7 @@
             }
             alert(serialize);
         });
-
+        $("button:contains(rect)").trigger('click');
     });
     function modalWindow(content_id,closeButton) {
         var overlay = $("<div id='modalwinDiv'></div>");

@@ -2,6 +2,8 @@ body
 {
     font-size: 62.5%;
     font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    padding: 0;
+    margin: 0;
 }
 canvas
 {
@@ -12,7 +14,13 @@ input[type="text"] {
     padding: 5px;
     border: 1px solid silver;
 }
-.container
+select{
+    width: 150px;
+    border-radius: 4px;
+    padding: 4px;
+    border: 1px solid silver;
+}
+#container
 {
     width:800px;
     margin:auto;
@@ -93,3 +101,4 @@ input[type="text"] {
     padding: 10px 20px;
     background: none;
 }
+

@@ -15,7 +15,7 @@
     <button id="savebtn">Save</button>
     <button id="resetbtn">Reset</button>
 </div>
-    <div class="container">
+    <div id="container">
         <div class="tool">
             <button>pointer</button>
             <button>rotate</button>
@@ -28,9 +28,7 @@
             <button>month</button>
             <span style="margin:0 10px ;color:#faa;font-size: 11px">یکی ا اینا ره انتخاب کن پایین بکش</span>
         </div>
-
         <div class="ch_FL">
-
             <div id="canvasContainer">
                 <canvas id="canvasElement" width="400" height="600">
                     ای بنده خدا مرورگرت جدید نیست اگر میتوانی کاری بکن
@@ -66,7 +64,7 @@
                             <label>height</label>
                             <input type="text" placeholder="500">
                         </div>
-                        <button style="border:1px solid silver;padding: 5%;width: 90%;
+                        <button id="startDesignBtn" style="border:1px solid silver;padding: 5%;width: 90%;
 margin: 5px 5%;border-radius: 5px">Start Design</button>
                     </div>
                 </div>
@@ -119,7 +117,10 @@ margin: 5px 5%;border-radius: 5px">Start Design</button>
                     <span class="colpick"></span>
                 </div>
             </div>
+            <div style="clear: both;float:none;"></div>
         </div>
+
     </div>
+<div id="status_bar" style="position:fixed;border-top:1px solid silver;padding:5px;font-size: 11px;background: #eee">Project initializing</div>
 </body>
 </html>
